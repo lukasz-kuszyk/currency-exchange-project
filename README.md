@@ -9,9 +9,6 @@ bin/start
 
 # install composer deps
 bin/composer install
-
-# execute sample exchanges
-bin/execute
 ```
 
 ### Tests
@@ -27,4 +24,10 @@ bin/cli vendor/bin/phpstan
 ```bash
 # PHPUnit
 bin/cli vendor/bin/phpunit tests
+```
+
+#### BDD
+```bash
+# Behat
+bin/cli vendor/bin/behat
 ```
