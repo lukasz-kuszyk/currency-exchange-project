@@ -6,75 +6,51 @@ namespace Nauta\CurrencyExchangeProject\Unit\CurrencyExchange\Policy;
 
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy\NoDiffCurrencyExchangePolicy;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Currency;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangeCurrencyAmount;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\BuyCurrencyQuota;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\SellCurrencyQuota;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\BuyExchangeRateValue;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\SellExchangeRateValue;
 use PHPUnit\Framework\TestCase;
 
 class NoDiffCurrencyExchangePolicyTest extends TestCase
 {
-    public function testBuyNoDiffCurrencyExchangePolicy(): void
+    public function testSellCurrencyExchangePolicy(): void
     {
-        $currencyA = new Currency('A');
-        $currencyAAmount = new CurrencyAmount($currencyA, 100);
-
-        $currencyB = new Currency('B');
-        $currencyBAmount = new CurrencyAmount($currencyB, 200);
-
-        $exchangeAmount = new ExchangeCurrencyAmount(
-            $currencyAAmount,
-            $currencyBAmount,
-            new BuyExchangeRateValue(2.0),
+        // given
+        $quota = SellCurrencyQuota::withSellRate(
+            new Currency('A'),
+            new Currency('B'),
+            new SellExchangeRateValue(2.0),
+            5.00
         );
 
+        // when
         $policy = new NoDiffCurrencyExchangePolicy();
-        $actual = $policy->calculateFinalExchange($exchangeAmount);
+        $actual = $policy->calculateFinalExchange($quota);
 
+        // then
         self::assertTrue(
-            $actual->getBeforeExchangedCurrencyAmount()->isEqualTo($exchangeAmount),
-        );
-
-        self::assertTrue(
-            $actual->getFinalCurrencyAmount()->isEqualTo($currencyBAmount),
-        );
-
-        self::assertTrue(
-            $actual->getDifferenceCurrencyAmount()->isEqualTo(
-                new CurrencyAmount($currencyB, .0),
-            )
+            $quota->getExchangeCurrencyAmount()->isEqualTo($actual)
         );
     }
 
-    public function testSellNoDiffCurrencyExchangePolicy(): void
+    public function testBuyCurrencyExchangePolicy(): void
     {
-        $currencyA = new Currency('A');
-        $currencyAAmount = new CurrencyAmount($currencyA, 200);
-
-        $currencyB = new Currency('B');
-        $currencyBAmount = new CurrencyAmount($currencyB, 100);
-
-        $exchangeAmount = new ExchangeCurrencyAmount(
-            $currencyAAmount,
-            $currencyBAmount,
-            new SellExchangeRateValue(2.0),
+        // given
+        $quota = BuyCurrencyQuota::withBuyRate(
+            new Currency('A'),
+            new Currency('B'),
+            new BuyExchangeRateValue(2.0),
+            5.00
         );
 
+        // when
         $policy = new NoDiffCurrencyExchangePolicy();
-        $actual = $policy->calculateFinalExchange($exchangeAmount);
+        $actual = $policy->calculateFinalExchange($quota);
 
+        // then
         self::assertTrue(
-            $actual->getBeforeExchangedCurrencyAmount()->isEqualTo($exchangeAmount),
-        );
-
-        self::assertTrue(
-            $actual->getFinalCurrencyAmount()->isEqualTo($currencyBAmount),
-        );
-
-        self::assertTrue(
-            $actual->getDifferenceCurrencyAmount()->isEqualTo(
-                new CurrencyAmount($currencyB, .0),
-            )
+            $quota->getExchangeCurrencyAmount()->isEqualTo($actual)
         );
     }
 }

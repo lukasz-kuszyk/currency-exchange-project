@@ -5,17 +5,15 @@ declare(strict_types=1);
 namespace Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy;
 
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangeCurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\FinalExchangeCurrencyAmount;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\CurrencyQuota;
 
 final readonly class NoDiffCurrencyExchangePolicy implements CurrencyExchangePolicyInterface
 {
-    public function calculateFinalExchange(ExchangeCurrencyAmount $exchangedCurrencyAmount): FinalExchangeCurrencyAmount
+    public function calculateFinalExchange(CurrencyQuota $quota): CurrencyAmount
     {
-        return new FinalExchangeCurrencyAmount(
-            $exchangedCurrencyAmount,
-            new CurrencyAmount($exchangedCurrencyAmount->getToCurrencyAmount()->getCurrency(), .0),
-            $exchangedCurrencyAmount->getToCurrencyAmount(),
+        return new CurrencyAmount(
+            $quota->getExchangeCurrencyAmount()->getCurrency(),
+            $quota->getExchangeCurrencyAmount()->getAmount(),
         );
     }
 }

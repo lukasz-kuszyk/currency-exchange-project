@@ -8,50 +8,71 @@ use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Model\BuyCurrency;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Model\SellCurrency;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy\CurrencyExchangePolicyInterface;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\FinalExchangeCurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\CurrencyExchangeQuota;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\BuyCurrencyQuota;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\SellCurrencyQuota;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\BuyExchangeRateValue;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\SellExchangeRateValue;
+use Webmozart\Assert\Assert;
 
 readonly class CustomerCurrencyExchange
 {
     public function sell(
         SellCurrency $sellCurrency,
         CurrencyExchangePolicyInterface $currencyExchangePolicy,
-    ): FinalExchangeCurrencyAmount {
-        $quota = new CurrencyExchangeQuota(
-            $sellCurrency->sellCurrency,
-            $sellCurrency->buyCurrencyAmount->getCurrency(),
-            $sellCurrency->buyExchangeRateValue,
-            $sellCurrency->sellExchangeRateValue,
-        );
+    ): CurrencyAmount {
+        $rate = $sellCurrency->exchangeRateValue;
+        $quote = null;
 
-        $exchangeAmountBefore = $quota->sell(
-            new CurrencyAmount(
-                $sellCurrency->sellCurrency,
-                $sellCurrency->buyCurrencyAmount->getAmount(),
-            )
-        );
+        if ($rate instanceof BuyExchangeRateValue) {
+            $quote = SellCurrencyQuota::withBuyRate(
+                $sellCurrency->fromCurrency,
+                $sellCurrency->toCurrency,
+                $rate,
+                $sellCurrency->amount,
+            );
+        }
 
-        return $currencyExchangePolicy->calculateFinalExchange($exchangeAmountBefore);
+        if ($rate instanceof SellExchangeRateValue) {
+            $quote = SellCurrencyQuota::withSellRate(
+                $sellCurrency->fromCurrency,
+                $sellCurrency->toCurrency,
+                $rate,
+                $sellCurrency->amount,
+            );
+        }
+
+        Assert::notNull($quote);
+
+        return $currencyExchangePolicy->calculateFinalExchange($quote);
     }
 
     public function buy(
         BuyCurrency $buyCurrency,
         CurrencyExchangePolicyInterface $currencyExchangePolicy,
-    ): FinalExchangeCurrencyAmount {
-        $quota = new CurrencyExchangeQuota(
-            $buyCurrency->buyCurrency,
-            $buyCurrency->sellCurrencyAmount->getCurrency(),
-            $buyCurrency->buyExchangeRateValue,
-            $buyCurrency->sellExchangeRateValue,
-        );
+    ): CurrencyAmount {
+        $rate = $buyCurrency->exchangeRateValue;
+        $quote = null;
 
-        $exchangeAmountBefore = $quota->buy(
-            new CurrencyAmount(
-                $buyCurrency->buyCurrency,
-                $buyCurrency->sellCurrencyAmount->getAmount(),
-            )
-        );
+        if ($rate instanceof BuyExchangeRateValue) {
+            $quote = BuyCurrencyQuota::withBuyRate(
+                $buyCurrency->fromCurrency,
+                $buyCurrency->toCurrency,
+                $rate,
+                $buyCurrency->amount,
+            );
+        }
 
-        return $currencyExchangePolicy->calculateFinalExchange($exchangeAmountBefore);
+        if ($rate instanceof SellExchangeRateValue) {
+            $quote = BuyCurrencyQuota::withSellRate(
+                $buyCurrency->fromCurrency,
+                $buyCurrency->toCurrency,
+                $rate,
+                $buyCurrency->amount,
+            );
+        }
+
+        Assert::notNull($quote);
+
+        return $currencyExchangePolicy->calculateFinalExchange($quote);
     }
 }

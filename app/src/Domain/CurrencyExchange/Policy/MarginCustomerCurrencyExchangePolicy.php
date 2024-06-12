@@ -7,35 +7,32 @@ namespace Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangeCurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\FinalExchangeCurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\BuyExchangeRateValue;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\BuyCurrencyQuota;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\CurrencyQuota;
 
 final readonly class MarginCustomerCurrencyExchangePolicy implements CurrencyExchangePolicyInterface
 {
     public const PERCENT_VALUE = 0.01;
+    public const SCALE_VALUE = 2;
+    public const ROUNDING_MODE = RoundingMode::HALF_UP;
 
-    public function calculateFinalExchange(
-        ExchangeCurrencyAmount $exchangedCurrencyAmount,
-    ): FinalExchangeCurrencyAmount {
-        $marginAmount = BigDecimal::of($exchangedCurrencyAmount->getToCurrencyAmount()->getAmount())
+    public function calculateFinalExchange(CurrencyQuota $quota): CurrencyAmount
+    {
+        $marginAmount = BigDecimal::of($quota->getExchangeCurrencyAmount()->getAmount())
             ->multipliedBy(self::PERCENT_VALUE);
 
-        if ($exchangedCurrencyAmount->getExchangeRate() instanceof BuyExchangeRateValue) {
-            $marginAmount = $marginAmount->multipliedBy(-1);
+        if ($quota instanceof BuyCurrencyQuota) {
+            $marginAmount = $marginAmount->multipliedBy(-1); // for subtraction
         }
 
-        $finalAmount = BigDecimal::of($exchangedCurrencyAmount->getToCurrencyAmount()->getAmount())
+        $finalAmount = BigDecimal::of($quota->getExchangeCurrencyAmount()->getAmount())
             ->plus($marginAmount)
-            ->toScale(2, RoundingMode::HALF_UP)
+            ->toScale(self::SCALE_VALUE, self::ROUNDING_MODE)
             ->toFloat();
 
-        $destCurrency = $exchangedCurrencyAmount->getToCurrencyAmount()->getCurrency();
-
-        return new FinalExchangeCurrencyAmount(
-            $exchangedCurrencyAmount,
-            new CurrencyAmount($destCurrency, $marginAmount->toFloat()),
-            new CurrencyAmount($destCurrency, $finalAmount),
+        return new CurrencyAmount(
+            $quota->getExchangeCurrencyAmount()->getCurrency(),
+            $finalAmount,
         );
     }
 }

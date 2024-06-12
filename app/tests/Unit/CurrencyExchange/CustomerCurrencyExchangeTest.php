@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Nauta\CurrencyExchangeProject\Unit\CurrencyExchange;
 
-use Brick\Math\BigDecimal;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\CustomerCurrencyExchange;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Model\BuyCurrency;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Model\SellCurrency;
@@ -17,41 +16,83 @@ use PHPUnit\Framework\TestCase;
 
 class CustomerCurrencyExchangeTest extends TestCase
 {
-    public function testValidSell(): void
+    public function testValidSellWithSellRate(): void
     {
+        // given
+        $currencyEUR = new Currency('EUR');
+        $currencyGBP = new Currency('GBP');
+        $EURtoGBP = new SellExchangeRateValue(1.5678);
+
+        $sellCurrency = new SellCurrency($currencyEUR, $currencyGBP, $EURtoGBP, 100.0);
+        $policy = new NoDiffCurrencyExchangePolicy();
+
+        // when
         $exchange = new CustomerCurrencyExchange();
+        $actual = $exchange->sell($sellCurrency, $policy);
 
-        $result = $exchange->sell(
-            new SellCurrency(
-                new Currency('A'),
-                new CurrencyAmount(new Currency('B'), 100.0),
-                new BuyExchangeRateValue(1.5432),
-                new SellExchangeRateValue(1.5678),
-            ),
-            new NoDiffCurrencyExchangePolicy(),
-        );
+        // then
+        $expected = new CurrencyAmount($currencyGBP, 156.78);
 
-        self::assertTrue(
-            BigDecimal::of($result->getFinalCurrencyAmount()->getAmount())->isEqualTo(156.78),
-        );
+        self::assertTrue($expected->isEqualTo($actual));
     }
 
-    public function testValidBuy(): void
+    public function testValidSellWithBuyRate(): void
     {
+        // given
+        $currencyEUR = new Currency('EUR');
+        $currencyGBP = new Currency('GBP');
+        $BGPtoEUR = new BuyExchangeRateValue(1.5432);
+
+        $sellCurrency = new SellCurrency($currencyGBP, $currencyEUR, $BGPtoEUR, 100.0);
+        $policy = new NoDiffCurrencyExchangePolicy();
+
+        // when
         $exchange = new CustomerCurrencyExchange();
+        $actual = $exchange->sell($sellCurrency, $policy);
 
-        $result = $exchange->buy(
-            new BuyCurrency(
-                new Currency('A'),
-                new CurrencyAmount(new Currency('B'), 100.0),
-                new BuyExchangeRateValue(1.5432),
-                new SellExchangeRateValue(1.5678),
-            ),
-            new NoDiffCurrencyExchangePolicy(),
-        );
+        // then
+        $expected = new CurrencyAmount($currencyEUR, 154.32);
 
-        self::assertTrue(
-            BigDecimal::of($result->getFinalCurrencyAmount()->getAmount())->isEqualTo(63.78),
-        );
+        self::assertTrue($expected->isEqualTo($actual));
+    }
+
+    public function testValidBuyWithSellRate(): void
+    {
+        // given
+        $currencyEUR = new Currency('EUR');
+        $currencyGBP = new Currency('GBP');
+        $EURtoGBP = new SellExchangeRateValue(1.5678);
+
+        $buyCurrency = new BuyCurrency($currencyEUR, $currencyGBP, $EURtoGBP, 100.0);
+        $policy = new NoDiffCurrencyExchangePolicy();
+
+        // when
+        $exchange = new CustomerCurrencyExchange();
+        $actual = $exchange->buy($buyCurrency, $policy);
+
+        // then
+        $expected = new CurrencyAmount($currencyEUR, 63.78);
+
+        self::assertTrue($expected->isEqualTo($actual));
+    }
+
+    public function testValidBuyWithBuyRate(): void
+    {
+        // given
+        $currencyEUR = new Currency('EUR');
+        $currencyGBP = new Currency('GBP');
+        $BGPtoEUR = new BuyExchangeRateValue(1.5432);
+
+        $buyCurrency = new BuyCurrency($currencyGBP, $currencyEUR, $BGPtoEUR, 100.0);
+        $policy = new NoDiffCurrencyExchangePolicy();
+
+        // when
+        $exchange = new CustomerCurrencyExchange();
+        $actual = $exchange->buy($buyCurrency, $policy);
+
+        // then
+        $expected = new CurrencyAmount($currencyGBP, 64.8);
+
+        self::assertTrue($expected->isEqualTo($actual));
     }
 }
