@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Nauta\CurrencyExchangeProject\Unit\CurrencyExchange\Quota;
+namespace Nauta\CurrencyExchangeProject\Unit\CurrencyExchange\ValueObject\Quota;
 
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Currency;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
