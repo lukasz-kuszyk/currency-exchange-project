@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Currency;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangedCurrencyAmount;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangeCurrencyAmount;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\CurrencyExchangeQuota;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\BuyExchangeRateValue;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\SellExchangeRateValue;
 
 require 'bootstrap.php';
 
-function printTransaction(ExchangedCurrencyAmount $exchanged, bool $isClientSold): void
+function printTransaction(ExchangeCurrencyAmount $exchanged, bool $isClientSold): void
 {
     echo sprintf(
         'Client %s "%.2f %s" for "%.2f %s" with rate "%.4f"',

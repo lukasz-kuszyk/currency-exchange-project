@@ -8,7 +8,7 @@ use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Currency;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangedCurrencyAmount;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangeCurrencyAmount;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\BuyExchangeRateValue;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\ExchangeRateValue;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\SellExchangeRateValue;
@@ -23,7 +23,7 @@ readonly class CurrencyExchangeQuota
     ) {
     }
 
-    public function sell(CurrencyAmount $currencyAmount): ExchangedCurrencyAmount
+    public function sell(CurrencyAmount $currencyAmount): ExchangeCurrencyAmount
     {
         $isFromCurrency = $this->isFromCurrency($currencyAmount);
 
@@ -34,14 +34,14 @@ readonly class CurrencyExchangeQuota
             ->multipliedBy($rate->getRate())
             ->toFloat();
 
-        return new ExchangedCurrencyAmount(
+        return new ExchangeCurrencyAmount(
             $currencyAmount,
             new CurrencyAmount($destCurrency, $amount),
             $rate
         );
     }
 
-    public function buy(CurrencyAmount $currencyAmount): ExchangedCurrencyAmount
+    public function buy(CurrencyAmount $currencyAmount): ExchangeCurrencyAmount
     {
         $isFromCurrency = $this->isFromCurrency($currencyAmount);
 
@@ -52,7 +52,7 @@ readonly class CurrencyExchangeQuota
             ->dividedBy($rate->getRate(), 2, RoundingMode::HALF_UP)
             ->toFloat();
 
-        return new ExchangedCurrencyAmount(
+        return new ExchangeCurrencyAmount(
             $currencyAmount,
             new CurrencyAmount($destCurrency, $amount),
             $rate

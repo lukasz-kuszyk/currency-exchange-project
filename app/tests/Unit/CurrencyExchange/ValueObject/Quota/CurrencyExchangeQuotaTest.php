@@ -6,7 +6,7 @@ namespace Nauta\CurrencyExchangeProject\Unit\CurrencyExchange\ValueObject\Quota;
 
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Currency;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangedCurrencyAmount;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\ExchangeCurrencyAmount;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\CurrencyExchangeQuota;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\BuyExchangeRateValue;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\ExchangeRateValue;
@@ -100,7 +100,7 @@ final class CurrencyExchangeQuotaTest extends TestCase
     }
 
     protected static function assertExpectedExchangedCurrencyAmount(
-        ExchangedCurrencyAmount $actual,
+        ExchangeCurrencyAmount $actual,
         Currency $fromCurrency,
         float $fromCurrencyAmount,
         Currency $toCurrency,
