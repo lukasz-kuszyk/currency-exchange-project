@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "Fixing filesystem permissions..."
+
+docker compose exec -T php find vendor \( -type f -or -type d \) -exec chmod u+w {} +;
+
+echo "Filesystem permissions fixed."
