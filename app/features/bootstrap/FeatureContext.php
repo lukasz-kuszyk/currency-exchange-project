@@ -1,17 +1,19 @@
 <?php
 
+declare(strict_types=1);
+
 use Behat\Behat\Context\Context;
 use Brick\Math\BigDecimal;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\CustomerCurrencyExchange;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Model\BuyCurrency;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Model\SellCurrency;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Model\CustomerBuyCurrency;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Model\CustomerSellCurrency;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy\CurrencyExchangePolicyInterface;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy\MarginCustomerCurrencyExchangePolicy;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy\NoDiffCurrencyExchangePolicy;
 use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Currency;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\BuyExchangeRateValue;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\SellExchangeRateValue;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Money;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\BuyRate;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\SellRate;
 use PHPUnit\Framework\Assert;
 
 /**
@@ -24,7 +26,7 @@ class FeatureContext implements Context
     private Currency $currencyGBP;
     private BigDecimal $exchangeRate;
     private BigDecimal $amountGiven;
-    private CurrencyAmount $amountReceived;
+    private Money $moneyReceived;
 
     public function __construct()
     {
@@ -51,7 +53,7 @@ class FeatureContext implements Context
     /**
      * @Given the exchange rate from EUR to GBP is :rate
      */
-    public function theExchangeRateFromEurToGbpIs($rate): void
+    public function theExchangeRateFromEurToGbpIs(string $rate): void
     {
         $this->exchangeRate = BigDecimal::of($rate);
     }
@@ -59,7 +61,7 @@ class FeatureContext implements Context
     /**
      * @Given the exchange rate from GBP to EUR is :rate
      */
-    public function theExchangeRateFromGbpToEurIs($rate): void
+    public function theExchangeRateFromGbpToEurIs(string $rate): void
     {
         $this->exchangeRate = BigDecimal::of($rate);
     }
@@ -67,116 +69,108 @@ class FeatureContext implements Context
     /**
      * @When the client sells :amount EUR
      */
-    public function theClientSellsEur($amount): void
+    public function theClientSellsEur(string $amount): void
     {
         $this->amountGiven = BigDecimal::of($amount);
 
-        $sellCurrency = new SellCurrency(
-            $this->currencyEUR,
-            $this->currencyGBP,
-            new SellExchangeRateValue($this->exchangeRate->toFloat()),
-            $this->amountGiven->toFloat(),
+        $clientSell = new CustomerSellCurrency(
+            new Money($this->currencyEUR, $this->amountGiven->toFloat()),
+            BuyRate::asBuyRate($this->currencyEUR, $this->currencyGBP, $this->exchangeRate->toFloat()),
         );
         $policy = $this->createPolicy();
 
         $exchange = new CustomerCurrencyExchange();
-        $this->amountReceived = $exchange->sell($sellCurrency, $policy);
+        $this->moneyReceived = $exchange->sell($clientSell, $policy);
     }
 
     /**
      * @When the client buys :amount GBP
      */
-    public function theClientBuysGbp($amount): void
+    public function theClientBuysGbp(string $amount): void
     {
         $this->amountGiven = BigDecimal::of($amount);
 
-        $buyCurrency = new BuyCurrency(
-            $this->currencyEUR,
-            $this->currencyGBP,
-            new SellExchangeRateValue($this->exchangeRate->toFloat()),
-            $this->amountGiven->toFloat(),
+        $clientBuy = new CustomerBuyCurrency(
+            new Money($this->currencyGBP, $this->amountGiven->toFloat()),
+            SellRate::asSellRate($this->currencyEUR, $this->currencyGBP, $this->exchangeRate->toFloat())->invert(),
         );
         $policy = $this->createPolicy();
 
         $exchange = new CustomerCurrencyExchange();
-        $this->amountReceived = $exchange->buy($buyCurrency, $policy);
+        $this->moneyReceived = $exchange->buy($clientBuy, $policy);
     }
 
     /**
      * @When the client sells :amount GBP
      */
-    public function theClientSellsGbp($amount): void
+    public function theClientSellsGbp(string $amount): void
     {
         $this->amountGiven = BigDecimal::of($amount);
 
-        $sellCurrency = new SellCurrency(
-            $this->currencyEUR,
-            $this->currencyGBP,
-            new SellExchangeRateValue($this->exchangeRate->toFloat()),
-            $this->amountGiven->toFloat(),
+        $clientSell = new CustomerSellCurrency(
+            new Money($this->currencyGBP, $this->amountGiven->toFloat()),
+            BuyRate::asBuyRate($this->currencyGBP, $this->currencyEUR, $this->exchangeRate->toFloat()),
         );
         $policy = $this->createPolicy();
 
         $exchange = new CustomerCurrencyExchange();
-        $this->amountReceived = $exchange->sell($sellCurrency, $policy);
+        $this->moneyReceived = $exchange->sell($clientSell, $policy);
     }
 
     /**
      * @When the client buys :amount EUR
      */
-    public function theClientBuysEur($amount): void
+    public function theClientBuysEur(string $amount): void
     {
         $this->amountGiven = BigDecimal::of($amount);
 
-        $buyCurrency = new BuyCurrency(
-            $this->currencyEUR,
-            $this->currencyGBP,
-            new BuyExchangeRateValue($this->exchangeRate->toFloat()),
-            $this->amountGiven->toFloat(),
+        $clientBuy = new CustomerBuyCurrency(
+            new Money($this->currencyEUR, $this->amountGiven->toFloat()),
+            SellRate::asSellRate($this->currencyGBP, $this->currencyEUR, $this->exchangeRate->toFloat())->invert(),
         );
         $policy = $this->createPolicy();
 
         $exchange = new CustomerCurrencyExchange();
-        $this->amountReceived = $exchange->buy($buyCurrency, $policy);
+        $this->moneyReceived = $exchange->buy($clientBuy, $policy);
     }
 
     /**
      * @Then the client should receive :amount GBP
      */
-    public function theClientShouldReceiveGbp($amount): void
+    public function theClientShouldReceiveGbp(string $amount): void
     {
         Assert::assertTrue(
-            BigDecimal::of($amount)->isEqualTo($this->amountReceived->getAmount())
+            (new Money($this->currencyGBP, BigDecimal::of($amount)->toFloat()))->isEqualTo($this->moneyReceived)
         );
     }
 
     /**
      * @Then the client should pay :amount EUR
      */
-    public function theClientShouldPayEur($amount): void
+    public function theClientShouldPayEur(string $amount): void
     {
         Assert::assertTrue(
-            BigDecimal::of($amount)->isEqualTo($this->amountReceived->getAmount())
+            (new Money($this->currencyEUR, BigDecimal::of($amount)->toFloat()))->isEqualTo($this->moneyReceived)
         );
     }
 
     /**
      * @Then the client should receive :amount EUR
      */
-    public function theClientShouldReceiveEur($amount): void
+    public function theClientShouldReceiveEur(string $amount): void
     {
         Assert::assertTrue(
-            BigDecimal::of($amount)->isEqualTo($this->amountReceived->getAmount())
+            (new Money($this->currencyEUR, BigDecimal::of($amount)->toFloat()))->isEqualTo($this->moneyReceived)
         );
     }
 
     /**
      * @Then the client should pay :amount GBP
      */
-    public function theClientShouldPayGbp($amount): void
+    public function theClientShouldPayGbp(string $amount): void
     {
         Assert::assertTrue(
-            BigDecimal::of($amount)->isEqualTo($this->amountReceived->getAmount())
+            (new Money($this->currencyGBP, BigDecimal::of($amount)->toFloat()))->isEqualTo($this->moneyReceived)
         );
     }
 
