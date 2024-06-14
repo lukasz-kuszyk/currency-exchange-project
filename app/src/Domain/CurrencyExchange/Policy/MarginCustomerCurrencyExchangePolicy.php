@@ -6,9 +6,9 @@ namespace Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy;
 
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\BuyCurrencyQuota;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\CurrencyQuota;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Money;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\MoneyCurrencyExchange;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Rate\SellRate;
 
 final readonly class MarginCustomerCurrencyExchangePolicy implements CurrencyExchangePolicyInterface
 {
@@ -16,22 +16,22 @@ final readonly class MarginCustomerCurrencyExchangePolicy implements CurrencyExc
     public const SCALE_VALUE = 2;
     public const ROUNDING_MODE = RoundingMode::HALF_UP;
 
-    public function calculateFinalExchange(CurrencyQuota $quota): CurrencyAmount
+    public function calculateFinalExchange(MoneyCurrencyExchange $currencyExchange): Money
     {
-        $marginAmount = BigDecimal::of($quota->getExchangeCurrencyAmount()->getAmount())
+        $marginAmount = BigDecimal::of($currencyExchange->toMoney->amount)
             ->multipliedBy(self::PERCENT_VALUE);
 
-        if ($quota instanceof BuyCurrencyQuota) {
+        if ($currencyExchange->rate instanceof SellRate) {
             $marginAmount = $marginAmount->multipliedBy(-1); // for subtraction
         }
 
-        $finalAmount = BigDecimal::of($quota->getExchangeCurrencyAmount()->getAmount())
+        $finalAmount = BigDecimal::of($currencyExchange->toMoney->amount)
             ->plus($marginAmount)
             ->toScale(self::SCALE_VALUE, self::ROUNDING_MODE)
             ->toFloat();
 
-        return new CurrencyAmount(
-            $quota->getExchangeCurrencyAmount()->getCurrency(),
+        return new Money(
+            $currencyExchange->toMoney->currency,
             $finalAmount,
         );
     }

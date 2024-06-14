@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\Policy;
 
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\CurrencyAmount;
-use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Quota\CurrencyQuota;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\Money;
+use Nauta\CurrencyExchangeProject\Domain\CurrencyExchange\ValueObject\MoneyCurrencyExchange;
 
 interface CurrencyExchangePolicyInterface
 {
-    public function calculateFinalExchange(CurrencyQuota $quota): CurrencyAmount;
+    public function calculateFinalExchange(MoneyCurrencyExchange $currencyExchange): Money;
 }
