@@ -65,7 +65,7 @@ class CustomerCurrencyExchangeTest extends TestCase
 
         $clientBuy = new CustomerBuyCurrency(
             new Money($currencyGBP, 100.0),
-            SellRate::asSellRate($currencyGBP, $currencyEUR, 1.5678),
+            SellRate::asSellRate($currencyEUR, $currencyGBP, 1.5678)->invert(),
         );
         $policy = new NoDiffCurrencyExchangePolicy();
 
@@ -73,7 +73,7 @@ class CustomerCurrencyExchangeTest extends TestCase
         $actual = (new CustomerCurrencyExchange())->buy($clientBuy, $policy);
 
         // then
-        $expected = (new Money($currencyEUR, 156.78));
+        $expected = (new Money($currencyEUR, 63.78));
         self::assertTrue($expected->isEqualTo($actual));
     }
 
@@ -85,7 +85,7 @@ class CustomerCurrencyExchangeTest extends TestCase
 
         $clientBuy = new CustomerBuyCurrency(
             new Money($currencyGBP, 100.0),
-            SellRate::asSellRate($currencyGBP, $currencyEUR, 1.5678),
+            SellRate::asSellRate($currencyEUR, $currencyGBP, 1.5678)->invert(),
         );
         $policy = new MarginCustomerCurrencyExchangePolicy();
 
@@ -93,7 +93,7 @@ class CustomerCurrencyExchangeTest extends TestCase
         $actual = (new CustomerCurrencyExchange())->buy($clientBuy, $policy);
 
         // then
-        $expected = (new Money($currencyEUR, 155.21));
+        $expected = (new Money($currencyEUR, 63.14));
         self::assertTrue($expected->isEqualTo($actual));
     }
 
@@ -145,7 +145,7 @@ class CustomerCurrencyExchangeTest extends TestCase
 
         $clientBuy = new CustomerBuyCurrency(
             new Money($currencyEUR, 100.0),
-            SellRate::asSellRate($currencyEUR, $currencyGBP, 1.5432),
+            SellRate::asSellRate($currencyGBP, $currencyEUR, 1.5432)->invert(),
         );
         $policy = new NoDiffCurrencyExchangePolicy();
 
@@ -153,7 +153,7 @@ class CustomerCurrencyExchangeTest extends TestCase
         $actual = (new CustomerCurrencyExchange())->buy($clientBuy, $policy);
 
         // then
-        $expected = (new Money($currencyGBP, 154.32));
+        $expected = (new Money($currencyGBP, 64.80));
         self::assertTrue($expected->isEqualTo($actual));
     }
 
@@ -165,7 +165,7 @@ class CustomerCurrencyExchangeTest extends TestCase
 
         $clientBuy = new CustomerBuyCurrency(
             new Money($currencyEUR, 100.0),
-            SellRate::asSellRate($currencyEUR, $currencyGBP, 1.5432),
+            SellRate::asSellRate($currencyGBP, $currencyEUR, 1.5432)->invert(),
         );
         $policy = new MarginCustomerCurrencyExchangePolicy();
 
@@ -173,7 +173,7 @@ class CustomerCurrencyExchangeTest extends TestCase
         $actual = (new CustomerCurrencyExchange())->buy($clientBuy, $policy);
 
         // then
-        $expected = (new Money($currencyGBP, 152.78));
+        $expected = (new Money($currencyGBP, 64.15));
         self::assertTrue($expected->isEqualTo($actual));
     }
 }
